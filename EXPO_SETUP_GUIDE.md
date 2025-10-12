@@ -69,3 +69,4 @@ Push notifications are temporarily disabled to prevent login issues. Your app wo
 ## Recommendation
 For now, keep push notifications disabled since your app works perfectly. You can set up Expo properly later when you have time, or skip push notifications entirely - the app is fully functional without them.
 
+

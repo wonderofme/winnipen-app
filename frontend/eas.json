@@ -14,6 +14,9 @@
       }
     },
     "production": {
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://winnipen-backend.onrender.com"
+      },
       "android": {
         "buildType": "app-bundle"
       }

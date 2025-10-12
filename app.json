@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "429ebc3d-96e4-46a0-b134-63d2d6914d98"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.winnipen.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}

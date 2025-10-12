@@ -3,7 +3,7 @@ import Constants from 'expo-constants';
 // API Configuration
 export const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 
   process.env.EXPO_PUBLIC_API_URL || 
-  'http://192.168.111.248:5001';
+  (__DEV__ ? 'http://192.168.111.248:5001' : 'https://winnipen-backend.onrender.com');
 
 // Firebase Configuration
 export const FIREBASE_CONFIG = {
