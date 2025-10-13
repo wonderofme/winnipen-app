@@ -62,11 +62,14 @@ const MapScreen = ({ navigation }) => {
   const handleNewPost = (newPost) => {
     console.log('📝 New post received on map:', newPost._id);
     setPosts(prevPosts => {
-      // Check if post already exists to prevent duplicates
-      const exists = prevPosts.some(post => post._id === newPost._id);
-      if (exists) {
-        console.log('⚠️ Post already exists on map, skipping:', newPost._id);
-        return prevPosts;
+      // Check if post already exists
+      const existingIndex = prevPosts.findIndex(post => post._id === newPost._id);
+      if (existingIndex !== -1) {
+        // Update existing post with full server data (replaces the immediate add)
+        console.log('🔄 Updating existing post with full server data:', newPost._id);
+        const updatedPosts = [...prevPosts];
+        updatedPosts[existingIndex] = newPost;
+        return updatedPosts;
       }
       console.log('✅ Adding new post to map:', newPost._id);
       return [newPost, ...prevPosts];
@@ -182,9 +185,25 @@ const MapScreen = ({ navigation }) => {
       });
 
       if (response.success) {
-        // Don't add the post directly here - let the Socket.IO event handle it
-        // This prevents duplicate posts from appearing
-        console.log('✅ Post created successfully, waiting for Socket.IO event');
+        console.log('✅ Post created successfully:', response.data._id);
+        
+        // Add the post immediately for instant feedback
+        const newPost = {
+          ...response.data,
+          author: user, // Use current user data for immediate display
+        };
+        
+        setPosts(prevPosts => {
+          // Check if post already exists to prevent duplicates
+          const exists = prevPosts.some(post => post._id === newPost._id);
+          if (exists) {
+            console.log('⚠️ Post already exists, skipping immediate add');
+            return prevPosts;
+          }
+          console.log('⚡ Adding new post immediately for instant feedback');
+          return [newPost, ...prevPosts];
+        });
+        
         setShowCreateModal(false);
         setSelectedLocation(null);
       } else {
