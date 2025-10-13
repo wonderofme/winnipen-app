@@ -206,14 +206,12 @@ const UserProfileScreen = ({ route, navigation }) => {
         </View>
         
         <Text style={styles.username}>
-          {user.anonymousMode ? 'Anonymous' : user.username}
+          {user.username}
         </Text>
         
-        {!user.anonymousMode && (
-          <Text style={styles.memberSince}>
-            Member since {new Date(user.createdAt).getFullYear()}
-          </Text>
-        )}
+        <Text style={styles.memberSince}>
+          Member since {new Date(user.createdAt).getFullYear()}
+        </Text>
         
         <View style={styles.stats}>
           <View style={styles.stat}>
@@ -245,7 +243,7 @@ const UserProfileScreen = ({ route, navigation }) => {
       {/* Recent Posts */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>
-          {user.anonymousMode ? 'Recent Activity' : `${user.username}'s Posts`}
+          {`${user.username}'s Posts`}
         </Text>
         
         {loadingPosts ? (
@@ -291,10 +289,10 @@ const UserProfileScreen = ({ route, navigation }) => {
           <View style={styles.emptyPosts}>
             <Ionicons name="chatbubbles-outline" size={48} color="#9ca3af" />
             <Text style={styles.emptyPostsText}>
-              {user.anonymousMode ? 'No recent activity' : 'No posts yet'}
+              No posts yet
             </Text>
             <Text style={styles.emptyPostsSubtext}>
-              {user.anonymousMode ? 'This user prefers to stay anonymous' : 'This user hasn\'t shared anything yet'}
+              This user hasn't shared anything yet
             </Text>
           </View>
         )}

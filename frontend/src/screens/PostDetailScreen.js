@@ -13,6 +13,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
+  Share,
+  Keyboard,
 } from 'react-native';
 import * as MediaLibrary from 'expo-media-library';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,7 +22,9 @@ import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { getPost, likePost, createComment, likeComment, deletePost } from '../utils/api';
 import { WINNIPEG_COLORS, WINNIPEG_TYPOGRAPHY, WINNIPEG_SPACING, WINNIPEG_RADIUS, WINNIPEG_SHADOWS } from '../utils/theme';
+import { getThumbnailUrlFromFullUrl } from '../utils/cloudinary';
 import CommentItem from '../components/CommentItem';
+import ImageViewerModal from '../components/ImageViewerModal';
 import ReportModal from '../components/ReportModal';
 
 const { width } = Dimensions.get('window');
@@ -39,7 +43,9 @@ const PostDetailScreen = ({ route, navigation }) => {
   const [likingComments, setLikingComments] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [replyingToComment, setReplyingToComment] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   const { user } = useAuth();
   const { onEvent, offEvent } = useSocket();
@@ -80,10 +86,12 @@ const PostDetailScreen = ({ route, navigation }) => {
 
   const setupSocketListeners = () => {
     onEvent('comment:new', handleNewComment);
+    onEvent('comment:liked', handleCommentLiked);
   };
 
   const cleanupSocketListeners = () => {
     offEvent('comment:new', handleNewComment);
+    offEvent('comment:liked', handleCommentLiked);
   };
 
   const handleNewComment = (newComment) => {
@@ -99,6 +107,17 @@ const PostDetailScreen = ({ route, navigation }) => {
         console.log('✅ Adding new comment:', newComment._id);
         return [newComment, ...prevComments];
       });
+    }
+  };
+
+  const handleCommentLiked = (updatedComment) => {
+    if (updatedComment.post === postId) {
+      console.log('❤️ Comment like update received:', updatedComment._id, 'likeCount:', updatedComment.likeCount);
+      setComments(prevComments =>
+        prevComments.map(comment =>
+          comment._id === updatedComment._id ? updatedComment : comment
+        )
+      );
     }
   };
 
@@ -171,6 +190,24 @@ const PostDetailScreen = ({ route, navigation }) => {
     }
   };
 
+  const handleReplyPress = (comment) => {
+    setReplyingToComment(comment);
+    setCommentText(`@${comment.author.username} `);
+    // Focus the comment input
+    setTimeout(() => {
+      if (commentInputRef.current) {
+        commentInputRef.current.focus();
+      }
+    }, 100);
+  };
+
+  const handleCancelReply = () => {
+    setReplyingToComment(null);
+    setCommentText('');
+    // Dismiss the keyboard when canceling reply
+    Keyboard.dismiss();
+  };
+
   const handleSubmitComment = async () => {
     if (!commentText.trim()) return;
 
@@ -179,6 +216,7 @@ const PostDetailScreen = ({ route, navigation }) => {
       const response = await createComment({
         text: commentText.trim(),
         postId,
+        parentComment: replyingToComment ? replyingToComment._id : null,
       });
 
       if (response.success) {
@@ -186,6 +224,9 @@ const PostDetailScreen = ({ route, navigation }) => {
         // Don't add to local state - let Socket.IO handle it
         // This prevents duplicates when the same comment comes via Socket.IO
         setCommentText('');
+        setReplyingToComment(null);
+        // Dismiss the keyboard after successful comment submission
+        Keyboard.dismiss();
       } else {
         Alert.alert('Error', response.error);
       }
@@ -233,6 +274,27 @@ const PostDetailScreen = ({ route, navigation }) => {
     console.log('✅ Report submitted successfully');
     // Optionally navigate back to feed
     navigation.goBack();
+  };
+
+  const handleShare = async () => {
+    try {
+      const shareContent = {
+        message: `Check out this post on Winnipen: "${post.text}"`,
+        url: `https://winnipen.app/post/${post._id}`, // Deep link to post
+        title: 'Winnipen Post'
+      };
+
+      const result = await Share.share(shareContent);
+      
+      if (result.action === Share.sharedAction) {
+        console.log('✅ Post shared successfully');
+      } else if (result.action === Share.dismissedAction) {
+        console.log('Share dismissed');
+      }
+    } catch (error) {
+      console.error('Share error:', error);
+      Alert.alert('Error', 'Failed to share post');
+    }
   };
 
   const handleDeletePost = () => {
@@ -360,7 +422,7 @@ const PostDetailScreen = ({ route, navigation }) => {
               </View>
               <View style={styles.authorDetails}>
                 <Text style={styles.authorName}>
-                  {post.author.anonymousMode ? 'Anonymous' : post.author.username}
+                  {post.author.username}
                 </Text>
                 <Text style={styles.postTime}>{formatTime(post.createdAt)}</Text>
               </View>
@@ -371,7 +433,12 @@ const PostDetailScreen = ({ route, navigation }) => {
 
           {post.mediaUrl && (
             <View style={styles.mediaContainer}>
-              <Image source={{ uri: post.mediaUrl }} style={styles.mediaImage} />
+              <TouchableOpacity onPress={() => setShowImageModal(true)} activeOpacity={0.8}>
+                <Image 
+                  source={{ uri: getThumbnailUrlFromFullUrl(post.mediaUrl) }} 
+                  style={styles.mediaImage} 
+                />
+              </TouchableOpacity>
             </View>
           )}
 
@@ -416,7 +483,7 @@ const PostDetailScreen = ({ route, navigation }) => {
               </TouchableOpacity>
             )}
 
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
               <Ionicons name="share-outline" size={24} color="#6b7280" />
               <Text style={styles.actionText}>Share</Text>
             </TouchableOpacity>
@@ -434,6 +501,7 @@ const PostDetailScreen = ({ route, navigation }) => {
               key={comment._id || `comment-${index}`}
               comment={comment}
               onLike={() => handleLikeComment(comment._id)}
+              onReply={() => handleReplyPress(comment)}
               isLiking={likingComments[comment._id]}
             />
           ))}
@@ -450,26 +518,38 @@ const PostDetailScreen = ({ route, navigation }) => {
 
       {/* Comment Input */}
       <View style={styles.commentInputContainer}>
-        <TextInput
-          ref={commentInputRef}
-          style={styles.commentInput}
-          placeholder="Add a comment..."
-          value={commentText}
-          onChangeText={setCommentText}
-          multiline
-          maxLength={300}
-        />
-        <TouchableOpacity
-          style={[styles.submitButton, (!commentText.trim() || submittingComment) && styles.submitButtonDisabled]}
-          onPress={handleSubmitComment}
-          disabled={!commentText.trim() || submittingComment}
-        >
-          {submittingComment ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <Ionicons name="send" size={20} color="white" />
-          )}
-        </TouchableOpacity>
+        {replyingToComment && (
+          <View style={styles.replyHeader}>
+            <Text style={styles.replyText}>
+              Replying to @{replyingToComment.author.username}
+            </Text>
+            <TouchableOpacity onPress={handleCancelReply}>
+              <Ionicons name="close" size={20} color="#6b7280" />
+            </TouchableOpacity>
+          </View>
+        )}
+        <View style={styles.commentInputRow}>
+          <TextInput
+            ref={commentInputRef}
+            style={styles.commentInput}
+            placeholder={replyingToComment ? "Write a reply..." : "Add a comment..."}
+            value={commentText}
+            onChangeText={setCommentText}
+            multiline
+            maxLength={300}
+          />
+          <TouchableOpacity
+            style={[styles.submitButton, (!commentText.trim() || submittingComment) && styles.submitButtonDisabled]}
+            onPress={handleSubmitComment}
+            disabled={!commentText.trim() || submittingComment}
+          >
+            {submittingComment ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Ionicons name="send" size={20} color="white" />
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Report Modal */}
@@ -478,6 +558,12 @@ const PostDetailScreen = ({ route, navigation }) => {
         onClose={() => setShowReportModal(false)}
         post={post}
         onReportSubmitted={handleReportSubmitted}
+      />
+
+      <ImageViewerModal
+        visible={showImageModal}
+        imageUrl={post?.mediaUrl}
+        onClose={() => setShowImageModal(false)}
       />
     </KeyboardAvoidingView>
   );
@@ -492,7 +578,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 20,
+    paddingBottom: 60,
   },
   loadingContainer: {
     flex: 1,
@@ -624,13 +710,19 @@ const styles = StyleSheet.create({
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    minWidth: 80,
+    flex: 1,
   },
   actionText: {
-    marginLeft: 8,
-    fontSize: 16,
+    marginLeft: 6,
+    fontSize: 14,
     color: '#6b7280',
+    fontWeight: '500',
+    textAlign: 'center',
   },
   likedText: {
     color: WINNIPEG_COLORS.jetsBlue,
@@ -674,13 +766,33 @@ const styles = StyleSheet.create({
     color: '#9ca3af',
   },
   commentInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
     backgroundColor: 'white',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
+    paddingBottom: 30,
+    paddingTop: 16,
+    paddingHorizontal: 16,
+  },
+  replyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+    backgroundColor: '#f9fafb',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  replyText: {
+    fontSize: 14,
+    color: '#6b7280',
+    fontStyle: 'italic',
+  },
+  commentInputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 12,
   },
   commentInput: {
     flex: 1,
@@ -688,10 +800,11 @@ const styles = StyleSheet.create({
     borderColor: '#d1d5db',
     borderRadius: 20,
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    marginRight: 12,
+    paddingVertical: 16,
+    minHeight: 50,
     maxHeight: 100,
     fontSize: 16,
+    textAlignVertical: 'top',
   },
   submitButton: {
     backgroundColor: WINNIPEG_COLORS.jetsBlue,
@@ -700,6 +813,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 5,
   },
   submitButtonDisabled: {
     backgroundColor: WINNIPEG_COLORS.gray[400],

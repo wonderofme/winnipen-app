@@ -23,7 +23,7 @@ const FeedScreen = ({ navigation }) => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [sortBy, setSortBy] = useState('createdAt'); // 'createdAt' or 'likeCount'
+  const [sortBy, setSortBy] = useState('createdAt'); // 'createdAt', 'likeCount', or 'distance'
   const [userLocation, setUserLocation] = useState(null);
 
   const { onEvent, offEvent } = useSocket();
@@ -41,11 +41,13 @@ const FeedScreen = ({ navigation }) => {
   const setupSocketListeners = () => {
     onEvent('post:new', handleNewPost);
     onEvent('post:deleted', handlePostDeleted);
+    onEvent('post:liked', handlePostLiked);
   };
 
   const cleanupSocketListeners = () => {
     offEvent('post:new', handleNewPost);
     offEvent('post:deleted', handlePostDeleted);
+    offEvent('post:liked', handlePostLiked);
   };
 
   const handleNewPost = (newPost) => {
@@ -66,6 +68,15 @@ const FeedScreen = ({ navigation }) => {
     setPosts(prevPosts => prevPosts.filter(post => post._id !== postId));
   };
 
+  const handlePostLiked = (updatedPost) => {
+    console.log('❤️ Post like update received in feed:', updatedPost._id, 'likeCount:', updatedPost.likeCount);
+    setPosts(prevPosts =>
+      prevPosts.map(post =>
+        post._id === updatedPost._id ? updatedPost : post
+      )
+    );
+  };
+
   const loadPosts = async (pageNum = 1, isRefresh = false) => {
     try {
       if (isRefresh) {
@@ -84,7 +95,20 @@ const FeedScreen = ({ navigation }) => {
       });
 
       if (response.success) {
-        const newPosts = response.data.posts;
+        let newPosts = response.data.posts;
+        
+        // Sort by distance if user location is available and sortBy is 'distance'
+        if (sortBy === 'distance' && userLocation) {
+          newPosts = newPosts.map(post => ({
+            ...post,
+            distance: getDistanceFromLatLonInMeters(
+              userLocation.latitude,
+              userLocation.longitude,
+              post.coordinates.latitude,
+              post.coordinates.longitude
+            )
+          })).sort((a, b) => a.distance - b.distance);
+        }
         
         if (pageNum === 1) {
           setPosts(newPosts);
@@ -135,6 +159,24 @@ const FeedScreen = ({ navigation }) => {
     }
   };
 
+  // Calculate distance between two coordinates in meters
+  const getDistanceFromLatLonInMeters = (lat1, lon1, lat2, lon2) => {
+    const R = 6371e3; // Radius of the earth in meters
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const d = R * c; // Distance in meters
+    return d;
+  };
+
+  const deg2rad = (deg) => {
+    return deg * (Math.PI/180);
+  };
+
   const handleLike = async (postId) => {
     try {
       const response = await likePost(postId);
@@ -164,7 +206,19 @@ const FeedScreen = ({ navigation }) => {
   };
 
   const toggleSort = () => {
-    const newSortBy = sortBy === 'createdAt' ? 'likeCount' : 'createdAt';
+    let newSortBy;
+    if (sortBy === 'createdAt') {
+      newSortBy = 'likeCount';
+    } else if (sortBy === 'likeCount') {
+      // Only allow distance sorting if user location is available
+      if (userLocation) {
+        newSortBy = 'distance';
+      } else {
+        newSortBy = 'createdAt'; // Skip distance if no location
+      }
+    } else {
+      newSortBy = 'createdAt';
+    }
     setSortBy(newSortBy);
   };
 
@@ -211,14 +265,14 @@ const FeedScreen = ({ navigation }) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>What's Happening in Winnipeg</Text>
-        <TouchableOpacity style={[styles.sortButton, sortBy === 'likeCount' && styles.sortButtonActive]} onPress={toggleSort}>
+        <TouchableOpacity style={[styles.sortButton, (sortBy === 'likeCount' || sortBy === 'distance') && styles.sortButtonActive]} onPress={toggleSort}>
           <Ionicons 
-            name={sortBy === 'createdAt' ? 'time' : 'heart'} 
+            name={sortBy === 'createdAt' ? 'time' : sortBy === 'likeCount' ? 'heart' : 'location'} 
             size={20} 
-            color={sortBy === 'likeCount' ? WINNIPEG_COLORS.jetsWhite : WINNIPEG_COLORS.jetsGold} 
+            color={(sortBy === 'likeCount' || sortBy === 'distance') ? WINNIPEG_COLORS.jetsWhite : WINNIPEG_COLORS.jetsGold} 
           />
-          <Text style={[styles.sortText, sortBy === 'likeCount' && styles.sortTextActive]}>
-            {sortBy === 'createdAt' ? 'Recent' : 'Popular'}
+          <Text style={[styles.sortText, (sortBy === 'likeCount' || sortBy === 'distance') && styles.sortTextActive]}>
+            {sortBy === 'createdAt' ? 'Recent' : sortBy === 'likeCount' ? 'Popular' : 'Nearby'}
           </Text>
         </TouchableOpacity>
       </View>

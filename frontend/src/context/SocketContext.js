@@ -29,11 +29,12 @@ export const SocketProvider = ({ children }) => {
       });
 
       newSocket.on('connect', () => {
-        console.log('Socket connected:', newSocket.id);
+        console.log('🔌 Socket connected:', newSocket.id);
         setConnected(true);
         
         // Join the main room
         newSocket.emit('join', { room: 'winnipen' });
+        console.log('🏠 Joined winnipen room');
       });
 
       newSocket.on('disconnect', () => {
@@ -64,6 +65,22 @@ export const SocketProvider = ({ children }) => {
       newSocket.on('notifications_read', (data) => {
         console.log('Notifications marked as read:', data);
       });
+
+      // Debug: Log all socket events
+      const originalEmit = newSocket.emit;
+      newSocket.emit = function(event, ...args) {
+        console.log('📤 Socket emit:', event, args);
+        return originalEmit.apply(this, [event, ...args]);
+      };
+
+      const originalOn = newSocket.on;
+      newSocket.on = function(event, callback) {
+        console.log('👂 Socket listening for:', event);
+        return originalOn.call(this, event, (...args) => {
+          console.log('📥 Socket received:', event, args);
+          return callback(...args);
+        });
+      };
 
       setSocket(newSocket);
 

@@ -50,11 +50,13 @@ const MapScreen = ({ navigation }) => {
   const setupSocketListeners = () => {
     onEvent('post:new', handleNewPost);
     onEvent('post:deleted', handlePostDeleted);
+    onEvent('post:liked', handlePostLiked);
   };
 
   const cleanupSocketListeners = () => {
     offEvent('post:new', handleNewPost);
     offEvent('post:deleted', handlePostDeleted);
+    offEvent('post:liked', handlePostLiked);
   };
 
   const handleNewPost = (newPost) => {
@@ -73,6 +75,18 @@ const MapScreen = ({ navigation }) => {
 
   const handlePostDeleted = (postId) => {
     setPosts(prevPosts => prevPosts.filter(post => post._id !== postId));
+  };
+
+  const handlePostLiked = (updatedPost) => {
+    console.log('❤️ Post like update received on map:', updatedPost._id, 'likeCount:', updatedPost.likeCount);
+    console.log('🔍 Updated post data:', JSON.stringify(updatedPost, null, 2));
+    setPosts(prevPosts => {
+      const updatedPosts = prevPosts.map(post =>
+        post._id === updatedPost._id ? updatedPost : post
+      );
+      console.log('🗺️ Map posts updated, new like count for post', updatedPost._id, ':', updatedPosts.find(p => p._id === updatedPost._id)?.likeCount);
+      return updatedPosts;
+    });
   };
 
   const requestLocationPermission = async () => {
@@ -145,19 +159,6 @@ const MapScreen = ({ navigation }) => {
 
   const handleMapPress = (event) => {
     const { latitude, longitude } = event.nativeEvent.coordinate;
-    
-    // Check if the tap is close to any existing post
-    const isNearPost = posts.some(post => {
-      const distance = getDistanceFromLatLonInMeters(
-        latitude, longitude,
-        post.coordinates.latitude, post.coordinates.longitude
-      );
-      return distance < 50; // 50 meters threshold
-    });
-
-    if (isNearPost) {
-      return; // Don't create post if tapping near an existing post
-    }
     
     // Only allow posting within Winnipeg bounds
     if (!isWithinWinnipegBounds(latitude, longitude)) {
@@ -279,7 +280,11 @@ const MapScreen = ({ navigation }) => {
               latitude: post.coordinates.latitude,
               longitude: post.coordinates.longitude,
             }}
-            onPress={() => handleMarkerPress(post)}
+            onPress={(e) => {
+              e.stopPropagation();
+              handleMarkerPress(post);
+            }}
+            tracksViewChanges={false}
           >
             <PostPin post={post} currentUser={user} />
             <Callout>
@@ -288,7 +293,7 @@ const MapScreen = ({ navigation }) => {
                   {post.text}
                 </Text>
                 <Text style={styles.calloutAuthor}>
-                  {post.author.anonymousMode ? 'Anonymous' : post.author.username}
+                  {post.author.username}
                 </Text>
               </View>
             </Callout>

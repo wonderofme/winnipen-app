@@ -1,8 +1,10 @@
+import Constants from 'expo-constants';
+
 // Cloudinary configuration
 const CLOUDINARY_CONFIG = {
-  cloud_name: process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.EXPO_PUBLIC_CLOUDINARY_API_KEY,
-  api_secret: process.env.EXPO_PUBLIC_CLOUDINARY_API_SECRET,
+  cloud_name: Constants.expoConfig?.extra?.cloudinaryCloudName || process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  api_key: Constants.expoConfig?.extra?.cloudinaryApiKey || process.env.EXPO_PUBLIC_CLOUDINARY_API_KEY,
+  api_secret: Constants.expoConfig?.extra?.cloudinaryApiSecret || process.env.EXPO_PUBLIC_CLOUDINARY_API_SECRET,
 };
 
 // Upload image to Cloudinary using fetch
@@ -154,7 +156,20 @@ export const getOptimizedImageUrl = (publicId, options = {}) => {
   return `https://res.cloudinary.com/${CLOUDINARY_CONFIG.cloud_name}/image/upload/${params}/${publicId}`;
 };
 
-// Generate thumbnail URL
+// Generate thumbnail URL from public ID
 export const getThumbnailUrl = (publicId) => {
   return `https://res.cloudinary.com/${CLOUDINARY_CONFIG.cloud_name}/image/upload/w_200,h_200,c_fill,q_auto,f_auto/${publicId}`;
+};
+
+// Generate thumbnail URL from full Cloudinary URL
+export const getThumbnailUrlFromFullUrl = (fullUrl, width = 400, height = 400) => {
+  if (!fullUrl) return null;
+  
+  // Check if it's a Cloudinary URL
+  if (!fullUrl.includes('res.cloudinary.com')) {
+    return fullUrl; // Return original if not Cloudinary
+  }
+  
+  // Insert transformation parameters into Cloudinary URL
+  return fullUrl.replace('/upload/', `/upload/w_${width},h_${height},c_fill,q_auto,f_auto/`);
 };

@@ -25,10 +25,11 @@ const UserPostsScreen = ({ route, navigation }) => {
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [deletingPostId, setDeletingPostId] = useState(null);
+  const [sortBy, setSortBy] = useState('createdAt'); // 'createdAt' or 'likeCount'
 
   useEffect(() => {
     loadPosts();
-  }, [userId]);
+  }, [userId, sortBy]);
 
   const loadPosts = async (pageNum = 1, refresh = false) => {
     try {
@@ -38,7 +39,7 @@ const UserPostsScreen = ({ route, navigation }) => {
         setLoading(true);
       }
 
-      const result = await getUserPosts(userId, { page: pageNum, limit: 20 });
+      const result = await getUserPosts(userId, { page: pageNum, limit: 20, sortBy, sortOrder: 'desc' });
       
       if (result.success) {
         const newPosts = result.data.posts || result.data;
@@ -72,6 +73,11 @@ const UserPostsScreen = ({ route, navigation }) => {
     if (!loading && hasMore) {
       loadPosts(page + 1);
     }
+  };
+
+  const toggleSort = () => {
+    const newSortBy = sortBy === 'createdAt' ? 'likeCount' : 'createdAt';
+    setSortBy(newSortBy);
   };
 
   const handlePostPress = (post) => {
@@ -161,12 +167,6 @@ const UserPostsScreen = ({ route, navigation }) => {
               </View>
             </View>
           </View>
-
-          <Ionicons 
-            name="chevron-forward" 
-            size={20} 
-            color={WINNIPEG_COLORS.gray[400]} 
-          />
         </TouchableOpacity>
 
         {/* Delete Button for Own Posts */}
@@ -221,6 +221,19 @@ const UserPostsScreen = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>{username}'s Posts</Text>
+        <TouchableOpacity style={[styles.sortButton, sortBy === 'likeCount' && styles.sortButtonActive]} onPress={toggleSort}>
+          <Ionicons 
+            name={sortBy === 'createdAt' ? 'time' : 'heart'} 
+            size={20} 
+            color={sortBy === 'likeCount' ? WINNIPEG_COLORS.jetsWhite : WINNIPEG_COLORS.jetsGold} 
+          />
+          <Text style={[styles.sortText, sortBy === 'likeCount' && styles.sortTextActive]}>
+            {sortBy === 'createdAt' ? 'Recent' : 'Popular'}
+          </Text>
+        </TouchableOpacity>
+      </View>
       <FlatList
         data={posts}
         keyExtractor={(item) => item._id}
@@ -248,6 +261,44 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: WINNIPEG_COLORS.prairieBeige,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: WINNIPEG_SPACING.lg,
+    paddingVertical: WINNIPEG_SPACING.md,
+    backgroundColor: WINNIPEG_COLORS.jetsWhite,
+    borderBottomWidth: 1,
+    borderBottomColor: WINNIPEG_COLORS.gray[200],
+  },
+  title: {
+    fontSize: WINNIPEG_TYPOGRAPHY.xl,
+    fontWeight: WINNIPEG_TYPOGRAPHY.bold,
+    color: WINNIPEG_COLORS.gray[800],
+  },
+  sortButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: WINNIPEG_SPACING.md,
+    paddingVertical: WINNIPEG_SPACING.sm,
+    borderRadius: WINNIPEG_RADIUS.md,
+    backgroundColor: WINNIPEG_COLORS.gray[100],
+    borderWidth: 1,
+    borderColor: WINNIPEG_COLORS.gray[300],
+  },
+  sortButtonActive: {
+    backgroundColor: WINNIPEG_COLORS.jetsBlue,
+    borderColor: WINNIPEG_COLORS.jetsBlue,
+  },
+  sortText: {
+    marginLeft: WINNIPEG_SPACING.sm,
+    fontSize: WINNIPEG_TYPOGRAPHY.sm,
+    fontWeight: WINNIPEG_TYPOGRAPHY.medium,
+    color: WINNIPEG_COLORS.gray[600],
+  },
+  sortTextActive: {
+    color: WINNIPEG_COLORS.jetsWhite,
   },
   loadingContainer: {
     flex: 1,

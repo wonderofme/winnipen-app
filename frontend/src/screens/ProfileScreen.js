@@ -24,7 +24,6 @@ const ProfileScreen = ({ navigation }) => {
   const { onEvent, offEvent } = useSocket();
   const [userPosts, setUserPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [anonymousMode, setAnonymousMode] = useState(user?.anonymousMode || false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingUsername, setEditingUsername] = useState('');
   const [editingAvatar, setEditingAvatar] = useState(null);
@@ -36,14 +35,14 @@ const ProfileScreen = ({ navigation }) => {
     if (user) {
       loadUserPosts();
       loadFollowCounts();
-      setAnonymousMode(user.anonymousMode);
     }
   }, [user]);
 
-  // Refresh follow counts when screen comes into focus
+  // Refresh data when screen comes into focus
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       if (user) {
+        loadUserPosts();
         loadFollowCounts();
       }
     });
@@ -76,50 +75,75 @@ const ProfileScreen = ({ navigation }) => {
       }
     };
 
+    const handleNewPost = (newPost) => {
+      // If the current user created a new post, add it to the user posts list
+      if (newPost.author._id === user?.id) {
+        console.log('📝 New post by current user received on profile:', newPost._id);
+        setUserPosts(prevPosts => {
+          // Check if post already exists to prevent duplicates
+          const exists = prevPosts.some(post => post._id === newPost._id);
+          if (exists) {
+            console.log('⚠️ Post already exists in profile, skipping:', newPost._id);
+            return prevPosts;
+          }
+          console.log('✅ Adding new post to profile:', newPost._id);
+          return [newPost, ...prevPosts];
+        });
+      }
+    };
+
+    const handlePostDeleted = (postId) => {
+      // Remove deleted post from user posts list
+      setUserPosts(prevPosts => prevPosts.filter(post => post._id !== postId));
+    };
+
+    const handlePostLiked = (updatedPost) => {
+      console.log('❤️ Post like update received in profile:', updatedPost._id, 'likeCount:', updatedPost.likeCount);
+      // Only update if it's the current user's post
+      if (updatedPost.author._id === user?.id) {
+        setUserPosts(prevPosts =>
+          prevPosts.map(post =>
+            post._id === updatedPost._id ? updatedPost : post
+          )
+        );
+      }
+    };
+
     onEvent('follow', handleFollowEvent);
     onEvent('unfollow', handleUnfollowEvent);
+    onEvent('post:new', handleNewPost);
+    onEvent('post:deleted', handlePostDeleted);
+    onEvent('post:liked', handlePostLiked);
 
     return () => {
       offEvent('follow', handleFollowEvent);
       offEvent('unfollow', handleUnfollowEvent);
+      offEvent('post:new', handleNewPost);
+      offEvent('post:deleted', handlePostDeleted);
+      offEvent('post:liked', handlePostLiked);
     };
   }, [onEvent, offEvent, user?.id]);
 
   const loadUserPosts = async () => {
     try {
+      console.log('🔄 Loading user posts for user:', user?.id);
       setLoading(true);
       const response = await getUserPosts(user.id, { limit: 10 });
+      console.log('📝 User posts response:', response);
       
       if (response.success) {
+        console.log('✅ User posts loaded:', response.data.posts?.length || 0, 'posts');
         setUserPosts(response.data.posts);
+      } else {
+        console.error('❌ Failed to load user posts:', response.error);
       }
     } catch (error) {
-      console.error('Load user posts error:', error);
+      console.error('❌ Load user posts error:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleToggleAnonymous = async () => {
-    try {
-      const newAnonymousMode = !anonymousMode;
-      const response = await updateUserProfile({ anonymousMode: newAnonymousMode });
-      
-      if (response.success) {
-        setAnonymousMode(newAnonymousMode);
-        updateUser(response.data);
-        Alert.alert(
-          'Settings Updated',
-          `You are now posting ${newAnonymousMode ? 'anonymously' : 'with your username'}.`
-        );
-      } else {
-        Alert.alert('Error', response.error);
-      }
-    } catch (error) {
-      console.error('Update profile error:', error);
-      Alert.alert('Error', 'Failed to update settings');
-    }
-  };
 
   const handleSignOut = () => {
     Alert.alert(
@@ -313,38 +337,6 @@ const ProfileScreen = ({ navigation }) => {
             <Text style={styles.statLabel}>Posts</Text>
           </TouchableOpacity>
         </View>
-      </View>
-
-      {/* Settings */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Settings</Text>
-        
-        <TouchableOpacity style={styles.settingItem} onPress={handleToggleAnonymous}>
-          <View style={styles.settingInfo}>
-            <Ionicons name="eye-off" size={24} color={WINNIPEG_COLORS.jetsGold} />
-            <View style={styles.settingDetails}>
-              <Text style={styles.settingTitle}>Anonymous Mode</Text>
-              <Text style={styles.settingDescription}>
-                {anonymousMode ? 'Your posts will show as "Anonymous"' : 'Your posts will show your username'}
-              </Text>
-            </View>
-          </View>
-          <View style={[styles.toggle, anonymousMode && styles.toggleActive]}>
-            <View style={[styles.toggleThumb, anonymousMode && styles.toggleThumbActive]} />
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.settingItem}>
-          <View style={styles.settingInfo}>
-            <Ionicons name="notifications" size={24} color="#6b7280" />
-            <View style={styles.settingDetails}>
-              <Text style={styles.settingTitle}>Notifications</Text>
-              <Text style={styles.settingDescription}>Manage your notification preferences</Text>
-            </View>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
-        </TouchableOpacity>
-
       </View>
 
       {/* Recent Posts */}

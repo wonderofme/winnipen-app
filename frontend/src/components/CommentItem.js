@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { WINNIPEG_COLORS, WINNIPEG_TYPOGRAPHY, WINNIPEG_SPACING, WINNIPEG_RADIUS, WINNIPEG_SHADOWS } from '../utils/theme';
 
-const CommentItem = ({ comment, onLike, isLiking = false }) => {
+const CommentItem = ({ comment, onLike, onReply, isLiking = false }) => {
   const { user } = useAuth();
 
   const formatTime = (timestamp) => {
@@ -40,7 +40,7 @@ const CommentItem = ({ comment, onLike, isLiking = false }) => {
           </View>
           <View style={styles.authorDetails}>
             <Text style={styles.authorName}>
-              {comment.author.anonymousMode ? 'Anonymous' : comment.author.username}
+              {comment.author.username}
             </Text>
             <Text style={styles.commentTime}>{formatTime(comment.createdAt)}</Text>
           </View>
@@ -69,7 +69,7 @@ const CommentItem = ({ comment, onLike, isLiking = false }) => {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity style={styles.actionButton} onPress={onReply}>
           <Ionicons name="chatbubble-outline" size={16} color="#9ca3af" />
           <Text style={styles.actionText}>Reply</Text>
         </TouchableOpacity>

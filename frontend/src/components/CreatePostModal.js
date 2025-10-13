@@ -35,8 +35,7 @@ const CreatePostModal = ({ visible, onClose, onSubmit, location }) => {
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'], // Images only
-        allowsEditing: true,
-        aspect: [4, 3],
+        allowsEditing: false,
         quality: 0.8,
       });
 
@@ -61,8 +60,7 @@ const CreatePostModal = ({ visible, onClose, onSubmit, location }) => {
       }
 
       const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [4, 3],
+        allowsEditing: false,
         quality: 0.8,
       });
 
@@ -88,8 +86,8 @@ const CreatePostModal = ({ visible, onClose, onSubmit, location }) => {
         folder: 'winnipen/posts',
         quality: 'auto',
         fetch_format: 'auto',
-        width: 1200,
-        height: 1200,
+        width: 2000,
+        height: 2000,
         crop: 'limit'
       });
 

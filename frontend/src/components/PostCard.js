@@ -14,13 +14,16 @@ import * as MediaLibrary from 'expo-media-library';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { WINNIPEG_COLORS, WINNIPEG_TYPOGRAPHY, WINNIPEG_SPACING, WINNIPEG_RADIUS, WINNIPEG_SHADOWS } from '../utils/theme';
+import { getThumbnailUrlFromFullUrl } from '../utils/cloudinary';
 import ReportModal from './ReportModal';
+import ImageViewerModal from './ImageViewerModal';
 
 const PostCard = ({ post, userLocation, onPress, onLike, onCommentPress, navigation }) => {
   const { user } = useAuth();
   const [isLiking, setIsLiking] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   const formatTime = (timestamp) => {
     const now = new Date();
@@ -193,7 +196,12 @@ const PostCard = ({ post, userLocation, onPress, onLike, onCommentPress, navigat
 
       {post.mediaUrl && (
         <View style={styles.mediaContainer}>
-          <Image source={{ uri: post.mediaUrl }} style={styles.mediaImage} />
+          <TouchableOpacity onPress={() => setShowImageModal(true)} activeOpacity={0.8}>
+            <Image 
+              source={{ uri: getThumbnailUrlFromFullUrl(post.mediaUrl) }} 
+              style={styles.mediaImage} 
+            />
+          </TouchableOpacity>
         </View>
       )}
 
@@ -253,6 +261,13 @@ const PostCard = ({ post, userLocation, onPress, onLike, onCommentPress, navigat
         onClose={() => setShowReportModal(false)}
         post={post}
         onReportSubmitted={handleReportSubmitted}
+      />
+
+      {/* Image Viewer Modal */}
+      <ImageViewerModal
+        visible={showImageModal}
+        imageUrl={post.mediaUrl}
+        onClose={() => setShowImageModal(false)}
       />
     </TouchableOpacity>
   );
