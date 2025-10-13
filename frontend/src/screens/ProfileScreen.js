@@ -93,8 +93,13 @@ const ProfileScreen = ({ navigation }) => {
     };
 
     const handlePostDeleted = (postId) => {
+      console.log('🗑️ Post deleted event received in profile:', postId);
       // Remove deleted post from user posts list
-      setUserPosts(prevPosts => prevPosts.filter(post => post._id !== postId));
+      setUserPosts(prevPosts => {
+        const filteredPosts = prevPosts.filter(post => post._id !== postId);
+        console.log('👤 Profile posts updated, removed post:', postId, 'remaining posts:', filteredPosts.length);
+        return filteredPosts;
+      });
     };
 
     const handlePostLiked = (updatedPost) => {

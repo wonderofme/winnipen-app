@@ -77,7 +77,12 @@ const MapScreen = ({ navigation }) => {
   };
 
   const handlePostDeleted = (postId) => {
-    setPosts(prevPosts => prevPosts.filter(post => post._id !== postId));
+    console.log('🗑️ Post deleted event received on map:', postId);
+    setPosts(prevPosts => {
+      const filteredPosts = prevPosts.filter(post => post._id !== postId);
+      console.log('🗺️ Map posts updated, removed post:', postId, 'remaining posts:', filteredPosts.length);
+      return filteredPosts;
+    });
   };
 
   const handlePostLiked = (updatedPost) => {

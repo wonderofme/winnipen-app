@@ -65,7 +65,12 @@ const FeedScreen = ({ navigation }) => {
   };
 
   const handlePostDeleted = (postId) => {
-    setPosts(prevPosts => prevPosts.filter(post => post._id !== postId));
+    console.log('🗑️ Post deleted event received in feed:', postId);
+    setPosts(prevPosts => {
+      const filteredPosts = prevPosts.filter(post => post._id !== postId);
+      console.log('📰 Feed posts updated, removed post:', postId, 'remaining posts:', filteredPosts.length);
+      return filteredPosts;
+    });
   };
 
   const handlePostLiked = (updatedPost) => {

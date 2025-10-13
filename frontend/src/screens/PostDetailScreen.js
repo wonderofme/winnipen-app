@@ -321,12 +321,13 @@ const PostDetailScreen = ({ route, navigation }) => {
       const result = await deletePost(post._id);
       
       if (result.success) {
-        Alert.alert('Success', 'Post deleted successfully', [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ]);
+        console.log('✅ Post deleted successfully:', post._id);
+        // Navigate back immediately for instant feedback
+        navigation.goBack();
+        // Show success message after navigation
+        setTimeout(() => {
+          Alert.alert('Success', 'Post deleted successfully');
+        }, 100);
       } else {
         Alert.alert('Error', result.error || 'Failed to delete post');
       }
