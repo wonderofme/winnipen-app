@@ -18,7 +18,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.winnipen.app",
-      "buildNumber": "8",
+      "buildNumber": "10",
       "infoPlist": {
         "UIBackgroundModes": [
           "remote-notification",
@@ -87,7 +87,9 @@
       "firebaseAppId": "1:420394461951:web:53a0156da8e2107a90faca",
       "cloudinaryCloudName": "dzop57yr0",
       "cloudinaryApiKey": "237614723382691",
-      "cloudinaryApiSecret": "_GtGqEeX1XykUHwqYkAcSBKq7iM"
+      "cloudinaryApiSecret": "_GtGqEeX1XykUHwqYkAcSBKq7iM",
+      "privacyPolicyUrl": "https://wonderofme.github.io/winnipen-app/privacy-policy.html",
+      "communityGuidelinesUrl": "https://wonderofme.github.io/winnipen-app/community-guidelines.html"
     }
   }
 }

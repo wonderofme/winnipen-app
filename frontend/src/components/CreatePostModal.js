@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   ScrollView,
   Image,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -26,10 +27,17 @@ const CreatePostModal = ({ visible, onClose, onSubmit, location }) => {
 
   const handleImagePicker = async () => {
     try {
-      // Request permissions
+      // Request permissions with better explanation
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Please grant camera roll access to select images.');
+        Alert.alert(
+          'Photo Library Access Required',
+          'Winnipen needs access to your photo library to let you select images for your posts. We only access the specific photos you choose to upload.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Settings', onPress: () => Linking.openSettings() }
+          ]
+        );
         return;
       }
 

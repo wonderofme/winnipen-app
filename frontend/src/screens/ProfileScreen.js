@@ -10,6 +10,7 @@ import {
   Image,
   Modal,
   TextInput,
+  Linking,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -188,10 +189,17 @@ const ProfileScreen = ({ navigation }) => {
 
   const handleSelectImage = async () => {
     try {
-      // Request permissions
+      // Request permissions with better explanation
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Please allow access to your photo library to change your profile picture.');
+        Alert.alert(
+          'Photo Library Access Required',
+          'Winnipen needs access to your photo library to let you select a profile picture. We only access the specific photos you choose to upload.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Settings', onPress: () => Linking.openSettings() }
+          ]
+        );
         return;
       }
 

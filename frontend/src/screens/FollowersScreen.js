@@ -131,8 +131,11 @@ const FollowersScreen = ({ route, navigation }) => {
         
         <View style={styles.followerInfo}>
           <Text style={styles.followerName}>
-            {follower.username}
+            {follower.anonymousMode ? 'Anonymous' : follower.username}
           </Text>
+          {follower.anonymousMode && (
+            <Text style={styles.anonymousLabel}>Anonymous User</Text>
+          )}
         </View>
 
         {follower._id !== currentUser.id && (
