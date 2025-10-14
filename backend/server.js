@@ -17,8 +17,16 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:8081",
-    methods: ["GET", "POST"]
+    origin: [
+      process.env.FRONTEND_URL || "http://localhost:8081",
+      "http://localhost:8081",
+      "exp://192.168.111.248:8081",
+      "exp://localhost:8081",
+      /^exp:\/\/192\.168\.\d+\.\d+:8081$/,
+      /^exp:\/\/localhost:8081$/
+    ],
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
@@ -39,7 +47,14 @@ app.use(helmet({
 
 // CORS
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:8081",
+  origin: [
+    process.env.FRONTEND_URL || "http://localhost:8081",
+    "http://localhost:8081",
+    "exp://192.168.111.248:8081",
+    "exp://localhost:8081",
+    /^exp:\/\/192\.168\.\d+\.\d+:8081$/,
+    /^exp:\/\/localhost:8081$/
+  ],
   credentials: true
 }));
 
@@ -87,6 +102,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/moderation', require('./routes/moderation'));
 
 // Health check
 app.get('/api/health', (req, res) => {

@@ -21,6 +21,11 @@ const notificationSchema = new mongoose.Schema({
     ref: 'Post',
     required: false // Optional, only for post-related notifications
   },
+  comment: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Comment',
+    required: false // Optional, only for comment-related notifications
+  },
   message: {
     type: String,
     required: true,

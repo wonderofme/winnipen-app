@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const Comment = require('../models/Comment');
 const Post = require('../models/Post');
+const User = require('../models/User');
+const Notification = require('../models/Notification');
+const pushNotificationService = require('../services/pushNotificationService');
 const auth = require('../middleware/auth');
 
 // GET /api/comments/:postId - Get comments for a post
@@ -94,6 +97,61 @@ router.post('/', auth, async (req, res) => {
     post.comments.push(comment._id);
     await post.save();
 
+    // Create notifications
+    try {
+      if (parentCommentId) {
+        // This is a reply to a comment
+        const parentComment = await Comment.findById(parentCommentId).populate('author');
+        if (parentComment && parentComment.author._id.toString() !== req.user.id) {
+          // Create in-app notification
+          await Notification.create({
+            recipient: parentComment.author._id,
+            sender: req.user.id,
+            type: 'comment',
+            post: postId,
+            comment: comment._id,
+            message: `${req.user.username} replied to your comment`
+          });
+          
+          // Send push notification
+          if (parentComment.author.pushTokens && parentComment.author.pushTokens.length > 0) {
+            await pushNotificationService.sendCommentReplyNotification(
+              parentComment.author.pushTokens,
+              req.user.username,
+              comment._id
+            );
+          }
+        }
+      } else {
+        // This is a comment on a post
+        if (post.author.toString() !== req.user.id) {
+          const postAuthor = await User.findById(post.author);
+          
+          // Create in-app notification
+          await Notification.create({
+            recipient: post.author,
+            sender: req.user.id,
+            type: 'comment',
+            post: postId,
+            comment: comment._id,
+            message: `${req.user.username} commented on your post`
+          });
+          
+          // Send push notification
+          if (postAuthor.pushTokens && postAuthor.pushTokens.length > 0) {
+            await pushNotificationService.sendNewCommentNotification(
+              postAuthor.pushTokens,
+              req.user.username,
+              postId
+            );
+          }
+        }
+      }
+    } catch (notificationError) {
+      // Don't fail comment creation if notification fails
+      console.error('Error creating notification:', notificationError);
+    }
+
     // Emit real-time update
     const io = req.app.get('io');
     io.emit('comment:new', comment);
@@ -144,6 +202,10 @@ router.put('/:id/like', auth, async (req, res) => {
     };
     
     console.log('📊 Comment like response - likeCount:', commentData.likeCount, 'likes array length:', comment.likes.length);
+    
+    // Emit real-time update for comment like count changes
+    const io = req.app.get('io');
+    io.emit('comment:liked', commentData);
     
     res.json(commentData);
   } catch (error) {

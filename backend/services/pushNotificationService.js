@@ -88,6 +88,40 @@ class PushNotificationService {
 
     return await this.sendPushNotification(userTokens, title, body, data);
   }
+
+  async sendNewCommentNotification(userTokens, commenterName, postId) {
+    if (!userTokens || userTokens.length === 0) {
+      console.log('No push tokens found for post author');
+      return;
+    }
+
+    const title = 'New Comment';
+    const body = `${commenterName} commented on your post`;
+    const data = {
+      type: 'new_comment',
+      postId: postId,
+      commenterName: commenterName
+    };
+
+    return await this.sendPushNotification(userTokens, title, body, data);
+  }
+
+  async sendCommentReplyNotification(userTokens, replierName, commentId) {
+    if (!userTokens || userTokens.length === 0) {
+      console.log('No push tokens found for comment author');
+      return;
+    }
+
+    const title = 'New Reply';
+    const body = `${replierName} replied to your comment`;
+    const data = {
+      type: 'comment_reply',
+      commentId: commentId,
+      replierName: replierName
+    };
+
+    return await this.sendPushNotification(userTokens, title, body, data);
+  }
 }
 
 module.exports = new PushNotificationService();

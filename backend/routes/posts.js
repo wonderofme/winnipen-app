@@ -160,6 +160,24 @@ router.post('/', auth, async (req, res) => {
       });
     }
 
+    // Basic content filtering
+    const inappropriateWords = [
+      'spam', 'scam', 'fake', 'hate', 'violence', 'harassment'
+      // Add more inappropriate words/phrases as needed
+    ];
+    
+    const lowerText = text.toLowerCase();
+    const flaggedWords = inappropriateWords.filter(word => 
+      lowerText.includes(word.toLowerCase())
+    );
+    
+    if (flaggedWords.length > 0) {
+      return res.status(400).json({ 
+        error: 'Your post contains content that may violate our community guidelines. Please review and try again.',
+        flaggedWords 
+      });
+    }
+
     // Validate coordinates are within Winnipeg area (rough bounds)
     const { latitude, longitude } = coordinates;
     if (latitude < 49.7 || latitude > 50.1 || longitude < -97.4 || longitude > -96.8) {
@@ -227,6 +245,7 @@ router.post('/', auth, async (req, res) => {
 
     // Emit real-time update
     const io = req.app.get('io');
+    console.log('📡 Emitting post:new event to all clients:', post._id);
     io.emit('post:new', post);
 
     res.status(201).json(post);
@@ -276,6 +295,11 @@ router.put('/:id/like', auth, async (req, res) => {
     };
     
     console.log('📊 Post like response - likeCount:', postData.likeCount, 'likes array length:', post.likes.length);
+    
+    // Emit real-time update for like count changes
+    const io = req.app.get('io');
+    console.log('📡 Emitting post:liked event to all clients:', postData._id, 'likeCount:', postData.likeCount);
+    io.emit('post:liked', postData);
     
     res.json(postData);
   } catch (error) {
@@ -336,6 +360,7 @@ router.delete('/:id', auth, async (req, res) => {
 
     // Emit real-time update
     const io = req.app.get('io');
+    console.log('📡 Emitting post:deleted event to all clients:', post._id);
     io.emit('post:deleted', post._id);
 
     res.json({ message: 'Post deleted successfully' });

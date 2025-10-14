@@ -1547,3 +1547,19 @@
 {"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📍 Map center: Winnipeg, Canada (49.8954, -97.1385)\u001b[39m","timestamp":"2025-10-12 08:51:52:5152"}
 {"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2025-10-12 08:51:52:5152"}
 {"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Connected to MongoDB\u001b[39m","timestamp":"2025-10-12 08:51:52:5152"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Server running on port 5001\u001b[39m","timestamp":"2025-10-12 22:54:54:5454"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📍 Map center: Winnipeg, Canada (49.8954, -97.1385)\u001b[39m","timestamp":"2025-10-12 22:54:54:5454"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2025-10-12 22:54:54:5454"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Connected to MongoDB\u001b[39m","timestamp":"2025-10-12 22:54:55:5455"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Server running on port 5001\u001b[39m","timestamp":"2025-10-12 23:51:59:5159"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📍 Map center: Winnipeg, Canada (49.8954, -97.1385)\u001b[39m","timestamp":"2025-10-12 23:51:59:5159"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2025-10-12 23:51:59:5159"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Connected to MongoDB\u001b[39m","timestamp":"2025-10-12 23:51:59:5159"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Server running on port 5001\u001b[39m","timestamp":"2025-10-13 16:07:37:737"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📍 Map center: Winnipeg, Canada (49.8954, -97.1385)\u001b[39m","timestamp":"2025-10-13 16:07:37:737"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2025-10-13 16:07:37:737"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Connected to MongoDB\u001b[39m","timestamp":"2025-10-13 16:07:38:738"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Server running on port 5001\u001b[39m","timestamp":"2025-10-13 16:16:08:168"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📍 Map center: Winnipeg, Canada (49.8954, -97.1385)\u001b[39m","timestamp":"2025-10-13 16:16:08:168"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2025-10-13 16:16:08:168"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Connected to MongoDB\u001b[39m","timestamp":"2025-10-13 16:16:08:168"}
