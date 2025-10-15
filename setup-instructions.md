@@ -20,7 +20,7 @@
    ```
 
 3. **Set up environment variables**:
-   - Copy `env.example` to `.env`
+   - Copy `.env.example` to `.env`
    - Fill in your MongoDB URI, Firebase credentials, and JWT secret
 
 4. **Start the backend server**:
@@ -41,7 +41,7 @@
    ```
 
 3. **Set up environment variables**:
-   - Copy `env.example` to `.env`
+   - Copy `.env.example` to `.env`
    - Fill in your Firebase configuration and API URL
 
 4. **Start the Expo development server**:
@@ -89,7 +89,7 @@
 ✅ **Comments System** - Reply to posts  
 ✅ **Like System** - Like posts and comments  
 ✅ **Modern UI** - Clean, responsive design  
-✅ **Winnipeg-focused** - Geofenced to Winnipeg area  
+✅ **Location-based** - Geofenced to specific areas  
 
 ## Project Structure
 
@@ -123,7 +123,7 @@ winnipen/
 2. **Build frontend** for production with `expo build`
 3. **Set up push notifications** for real-time updates
 4. **Add moderation tools** for content management
-5. **Implement geofencing** for specific Winnipeg neighborhoods
+5. **Implement geofencing** for specific areas
 
 Happy coding! 🧭✨
 

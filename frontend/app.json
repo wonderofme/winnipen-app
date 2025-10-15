@@ -78,18 +78,18 @@
       "eas": {
         "projectId": "429ebc3d-96e4-46a0-b134-63d2d6914d98"
       },
-      "apiUrl": "https://winnipen-backend.onrender.com",
-      "firebaseApiKey": "AIzaSyBXY1QjxU8GM7hMmlyY4fYnuV8e3qP3EP8",
-      "firebaseAuthDomain": "winnipen-b69b3.firebaseapp.com",
-      "firebaseProjectId": "winnipen-b69b3",
-      "firebaseStorageBucket": "winnipen-b69b3.firebasestorage.app",
-      "firebaseMessagingSenderId": "420394461951",
-      "firebaseAppId": "1:420394461951:web:53a0156da8e2107a90faca",
-      "cloudinaryCloudName": "dzop57yr0",
-      "cloudinaryApiKey": "237614723382691",
-      "cloudinaryApiSecret": "_GtGqEeX1XykUHwqYkAcSBKq7iM",
-      "privacyPolicyUrl": "https://wonderofme.github.io/Winnipen/privacy-policy.html",
-      "communityGuidelinesUrl": "https://wonderofme.github.io/Winnipen/community-guidelines.html"
+      "apiUrl": "YOUR_API_URL_HERE",
+      "firebaseApiKey": "YOUR_FIREBASE_API_KEY",
+      "firebaseAuthDomain": "your-project.firebaseapp.com",
+      "firebaseProjectId": "your-firebase-project-id",
+      "firebaseStorageBucket": "your-project.firebasestorage.app",
+      "firebaseMessagingSenderId": "YOUR_FIREBASE_SENDER_ID",
+      "firebaseAppId": "YOUR_FIREBASE_APP_ID",
+      "cloudinaryCloudName": "your-cloudinary-cloud-name",
+      "cloudinaryApiKey": "your-cloudinary-api-key",
+      "cloudinaryApiSecret": "your-cloudinary-api-secret",
+      "privacyPolicyUrl": "https://wonderofme.github.io/winnipen-app/privacy-policy.html",
+      "communityGuidelinesUrl": "https://wonderofme.github.io/winnipen-app/community-guidelines.html"
     }
   }
 }
