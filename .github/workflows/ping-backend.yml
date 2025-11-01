@@ -1,0 +1,15 @@
+name: Ping Backend Every 13 Minutes
+
+on:
+  schedule:
+    # Runs every 13 minutes
+    - cron: '*/13 * * * *'
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  ping-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Backend Health Endpoint
+        run: |
+          curl -X GET https://winnipen-backend.onrender.com/api/health || echo "Backend may be sleeping or error occurred"
