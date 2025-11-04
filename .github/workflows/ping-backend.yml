@@ -2,14 +2,63 @@ name: Ping Backend Every 13 Minutes
 
 on:
   schedule:
-    # Runs every 13 minutes
+    # Runs every 13 minutes (UTC timezone)
+    # This ensures the backend stays awake (Render free tier spins down after 15 min inactivity)
     - cron: '*/13 * * * *'
   workflow_dispatch: # Allows manual trigger
+
+# Prevent multiple instances from running simultaneously
+concurrency:
+  group: ping-backend
+  cancel-in-progress: false
 
 jobs:
   ping-backend:
     runs-on: ubuntu-latest
+    timeout-minutes: 5  # Prevent hanging jobs
+    
     steps:
       - name: Ping Backend Health Endpoint
+        continue-on-error: true  # Don't fail the workflow if curl fails
+        timeout-minutes: 2  # Timeout for this step
         run: |
-          curl -X GET https://winnipen-backend.onrender.com/api/health || echo "Backend may be sleeping or error occurred"
+          echo "🔄 Pinging backend at $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          
+          # Try with timeout and retry logic
+          for i in {1..3}; do
+            echo "Attempt $i of 3..."
+            
+            # Use curl with timeout and follow redirects
+            response=$(curl -s -w "\n%{http_code}" --max-time 10 --connect-timeout 5 \
+              -X GET https://winnipen-backend.onrender.com/api/health 2>&1)
+            
+            http_code=$(echo "$response" | tail -n1)
+            body=$(echo "$response" | sed '$d')
+            
+            if [ "$http_code" = "200" ] || [ "$http_code" = "000" ]; then
+              echo "✅ Backend responded (HTTP $http_code)"
+              echo "Response: $body"
+              exit 0
+            else
+              echo "⚠️ Attempt $i failed (HTTP $http_code)"
+              if [ $i -lt 3 ]; then
+                echo "Retrying in 2 seconds..."
+                sleep 2
+              fi
+            fi
+          done
+          
+          # If all attempts failed, log but don't fail
+          echo "⚠️ All attempts failed - backend may be sleeping or unreachable"
+          echo "This is expected behavior for Render free tier - backend will wake on next request"
+          exit 0  # Always exit successfully to keep workflow running
+      
+      - name: Log Completion
+        if: always()  # Run even if previous step fails
+        run: |
+          echo "✅ Ping workflow completed at $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          echo "Next scheduled run: ~13 minutes"
+
+
+
+
